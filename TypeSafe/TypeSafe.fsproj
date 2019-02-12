@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Ordering.fs" />
+    <Compile Include="Semigroupoids.fs" />
+    <Compile Include="Functional.fs" />
+    <Compile Include="Boolean.fs" />
+    <Compile Include="Option.fs" />
+    <Compile Include="NaturalNumbers.fs" />
+    <Compile Include="Surreals.fs" />
+    <Compile Include="HyperNaturals.fs" />
+    <Compile Include="Integers.fs" />
+    <Compile Include="Rationals.fs" />
+    <Compile Include="PhysicalUnit.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+</Project>
