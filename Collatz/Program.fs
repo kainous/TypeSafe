@@ -112,6 +112,7 @@ let rec reduce =
   | [1, B; 1, O; 1, A] -> { KnownClosure = [1, A]; Cover = [1, A; 2, O; 1, A] }
   | [1, B; 2, O; 1, A] -> { KnownClosure = [1, A]; Cover = [1, A; 1, B; 1, A] }
   | [1, B; 3, O; 1, A] -> { KnownClosure = [1, A]; Cover = [2, A; 1, B] }
+
   | [1, B; 1, A]       -> { KnownClosure = [1, A]; Cover = [1, B; 1, O; 1, A] }
   // Already handled case: [1, B]
 
@@ -131,35 +132,35 @@ let rec reduce =
   | [1, B; 1, A; 1, O; 1, B]          -> { KnownClosure = [1, B; 1, O; 1, B; 2, O; 1, A]; Cover = [1, B; 1, O; 1, B; 2, O; 1, A] }
   | [1, B; 1, O; 1, B; 2, O; 1, A]    -> { KnownClosure = [1, A; 1, O; 1, A; 1, B; 1, A]; Cover = [1, A; 1, O; 1, A; 1, B; 1, A] }
   | [1, A; 1, O; 1, A; 1, B; 1, A]    -> { KnownClosure = [2, B; 1, O; 2, A]; Cover = [2, B; 1, O; 2, A] }
-  | [(2, B); (1, O); (2, A)]          -> { KnownClosure = [(1, B); (1, A); (4, O); (1, A)]; Cover = [(1, B); (1, A); (4, O); (1, A)] }
-  | [(2, B); (1, O); (2, A)]          -> { KnownClosure = [(1, B); (1, A); (4, O); (1, A)]; Cover = [(1, B); (1, A); (4, O); (1, A)] }
-  | [(1, B); (1, A); (4, O); (1, A)]  -> { KnownClosure = [(1, B); (1, O); (1, A); (2, O); (1, B)]; Cover = [(1, B); (1, O); (1, A); (2, O); (1, B)] }
-  | [(1, B); (1, O); (1, A); (2, O); (1, B)] -> { KnownClosure = [(1, A); (2, O); (2, A); (1, O); (1, A)]; Cover = [(1, A); (2, O); (2, A); (1, O); (1, A)] }
-  | [(1, A); (2, O); (2, A); (1, O); (1, A)] -> { KnownClosure = [(1, A); (2, B); (1, O); (1, B)]; Cover = [(1, A); (2, B); (1, O); (1, B)] }
-  | [(1, A); (2, B); (1, O); (1, B)]  -> { KnownClosure = [(1, B); (1, A); (1, O); (2, A)]; Cover = [(1, B); (1, A); (1, O); (2, A)] }
-  | [(1, B); (1, A); (1, O); (2, A)]  -> { KnownClosure = [(1, B); (1, O); (2, B); (1, A)]; Cover = [(1, B); (1, O); (2, B); (1, A)] }
-  | [(1, B); (1, O); (2, B); (1, A)]  -> { KnownClosure = [(1, A); (1, O); (2, B); (1, O); (1, A)]; Cover = [(1, A); (1, O); (2, B); (1, O); (1, A)] }
-  | [(1, A); (1, O); (2, B); (1, O); (1, A)] -> { KnownClosure = [(1, B); (1, O); (1, B); (3, O); (1, A)]; Cover = [(1, B); (1, O); (1, B); (3, O); (1, A)] }
-  | [(1, B); (1, O); (1, B); (3, O); (1, A)] -> { KnownClosure = [(1, A); (1, O); (2, A); (1, B)]; Cover = [(1, A); (1, O); (2, A); (1, B)] }
-  | [(1, A); (1, O); (2, A); (1, B)]  -> { KnownClosure = [(3, B); (2, O); (1, A)]; Cover = [(3, B); (2, O); (1, A)] }
-  | [(3, B); (2, O); (1, A)] -> { KnownClosure = [(2, B); (1, A); (1, B); (1, A)]; Cover = [(2, B); (1, A); (1, B); (1, A)] }
-  | [(2, B); (1, A); (1, B); (1, A)]  -> { KnownClosure = [(2, B); (2, O); (1, B); (1, O); (1, A)]; Cover = [(2, B); (2, O); (1, B); (1, O); (1, A)] }
-  | [(2, B); (2, O); (1, B); (1, O); (1, A)] -> { KnownClosure = [(1, B); (1, A); (1, B); (4, O); (1, A)]; Cover = [(1, B); (1, A); (1, B); (4, O); (1, A)] }
-  | [(1, B); (1, A); (1, B); (4, O); (1, A)] -> { KnownClosure = [(1, B); (2, O); (2, A); (1, O); (1, B)]; Cover = [(1, B); (2, O); (2, A); (1, O); (1, B)] }
-  | [(1, B); (2, O); (2, A); (1, O); (1, B)] -> { KnownClosure = [(1, A); (2, B); (2, A); (1, O); (1, A)]; Cover = [(1, A); (2, B); (2, A); (1, O); (1, A)] }
-  | [(1, A); (2, B); (2, A); (1, O); (1, A)] -> { KnownClosure = [(2, B); (3, O); (1, B); (1, A)]; Cover = [(2, B); (3, O); (1, B); (1, A)] }
-  | [(2, B); (3, O); (1, B); (1, A)]  -> { KnownClosure = [(1, B); (5, A)]; Cover = [(1, B); (5, A)] }
-  | [(1, B); (5, A)]                  -> { KnownClosure = [(1, B); (9, O); (1, A)]; Cover = [(1, B); (9, O); (1, A)] }
-  | [(1, B); (9, O); (1, A)]          -> { KnownClosure = [(0, B); (2, A); (6, O); (1, B)]; Cover = [(0, B); (2, A); (6, O); (1, B)] }
-  | [(0, B); (2, A); (6, O); (1, B)]  -> { KnownClosure = [(1, B); (9, O); (1, A)]; Cover = [(1, B); (9, O); (1, A)] }
-  | [(1, B); (9, O); (1, A)]          -> { KnownClosure = [(0, B); (2, A); (6, O); (1, B)]; Cover = [(0, B); (2, A); (6, O); (1, B)] }
-  | [(0, B); (2, A); (6, O); (1, B)]  -> { KnownClosure = [(2, A); (6, O); (1, B)]; Cover = [(2, A); (6, O); (1, B)] }
-  | [(2, A); (6, O); (1, B)]          -> { KnownClosure = [(1, A); (4, O); (1, A); (1, O); (1, A)]; Cover = [(1, A); (4, O); (1, A); (1, O); (1, A)] }
-  | [(1, A); (4, O); (1, A); (1, O); (1, A)] -> { KnownClosure = [(1, A); (2, O); (1, B); (1, O); (1, B)]; Cover = [(1, A); (2, O); (1, B); (1, O); (1, B)] }
-  | [(1, A); (2, O); (1, B); (1, O); (1, B)] -> { KnownClosure = [(2, A); (2, O); (2, A)]; Cover = [(2, A); (2, O); (2, A)] }
-  | [(2, A); (2, O); (2, A)]          -> { KnownClosure = [(1, A); (2, B)]; Cover = [(1, A); (2, B)] }
-  | [(1, A); (2, B)]                  -> { KnownClosure = [(1, B); (2, A)]; Cover = [(1, B); (2, A)] }
-  | [(1, B); (2, A)]                  -> { KnownClosure = [(1, B); (3, O); (1, A)]; Cover = [(1, B); (3, O); (1, A)] }
+  //| [(2, B); (1, O); (2, A)]          -> { KnownClosure = [(1, B); (1, A); (4, O); (1, A)]; Cover = [(1, B); (1, A); (4, O); (1, A)] }
+  //| [(2, B); (1, O); (2, A)]          -> { KnownClosure = [(1, B); (1, A); (4, O); (1, A)]; Cover = [(1, B); (1, A); (4, O); (1, A)] }
+  //| [(1, B); (1, A); (4, O); (1, A)]  -> { KnownClosure = [(1, B); (1, O); (1, A); (2, O); (1, B)]; Cover = [(1, B); (1, O); (1, A); (2, O); (1, B)] }
+  //| [(1, B); (1, O); (1, A); (2, O); (1, B)] -> { KnownClosure = [(1, A); (2, O); (2, A); (1, O); (1, A)]; Cover = [(1, A); (2, O); (2, A); (1, O); (1, A)] }
+  //| [(1, A); (2, O); (2, A); (1, O); (1, A)] -> { KnownClosure = [(1, A); (2, B); (1, O); (1, B)]; Cover = [(1, A); (2, B); (1, O); (1, B)] }
+  //| [(1, A); (2, B); (1, O); (1, B)]  -> { KnownClosure = [(1, B); (1, A); (1, O); (2, A)]; Cover = [(1, B); (1, A); (1, O); (2, A)] }
+  //| [(1, B); (1, A); (1, O); (2, A)]  -> { KnownClosure = [(1, B); (1, O); (2, B); (1, A)]; Cover = [(1, B); (1, O); (2, B); (1, A)] }
+  //| [(1, B); (1, O); (2, B); (1, A)]  -> { KnownClosure = [(1, A); (1, O); (2, B); (1, O); (1, A)]; Cover = [(1, A); (1, O); (2, B); (1, O); (1, A)] }
+  //| [(1, A); (1, O); (2, B); (1, O); (1, A)] -> { KnownClosure = [(1, B); (1, O); (1, B); (3, O); (1, A)]; Cover = [(1, B); (1, O); (1, B); (3, O); (1, A)] }
+  //| [(1, B); (1, O); (1, B); (3, O); (1, A)] -> { KnownClosure = [(1, A); (1, O); (2, A); (1, B)]; Cover = [(1, A); (1, O); (2, A); (1, B)] }
+  //| [(1, A); (1, O); (2, A); (1, B)]  -> { KnownClosure = [(3, B); (2, O); (1, A)]; Cover = [(3, B); (2, O); (1, A)] }
+  //| [(3, B); (2, O); (1, A)] -> { KnownClosure = [(2, B); (1, A); (1, B); (1, A)]; Cover = [(2, B); (1, A); (1, B); (1, A)] }
+  //| [(2, B); (1, A); (1, B); (1, A)]  -> { KnownClosure = [(2, B); (2, O); (1, B); (1, O); (1, A)]; Cover = [(2, B); (2, O); (1, B); (1, O); (1, A)] }
+  //| [(2, B); (2, O); (1, B); (1, O); (1, A)] -> { KnownClosure = [(1, B); (1, A); (1, B); (4, O); (1, A)]; Cover = [(1, B); (1, A); (1, B); (4, O); (1, A)] }
+  //| [(1, B); (1, A); (1, B); (4, O); (1, A)] -> { KnownClosure = [(1, B); (2, O); (2, A); (1, O); (1, B)]; Cover = [(1, B); (2, O); (2, A); (1, O); (1, B)] }
+  //| [(1, B); (2, O); (2, A); (1, O); (1, B)] -> { KnownClosure = [(1, A); (2, B); (2, A); (1, O); (1, A)]; Cover = [(1, A); (2, B); (2, A); (1, O); (1, A)] }
+  //| [(1, A); (2, B); (2, A); (1, O); (1, A)] -> { KnownClosure = [(2, B); (3, O); (1, B); (1, A)]; Cover = [(2, B); (3, O); (1, B); (1, A)] }
+  //| [(2, B); (3, O); (1, B); (1, A)]  -> { KnownClosure = [(1, B); (5, A)]; Cover = [(1, B); (5, A)] }
+  //| [(1, B); (5, A)]                  -> { KnownClosure = [(1, B); (9, O); (1, A)]; Cover = [(1, B); (9, O); (1, A)] }
+  //| [(1, B); (9, O); (1, A)]          -> { KnownClosure = [(0, B); (2, A); (6, O); (1, B)]; Cover = [(0, B); (2, A); (6, O); (1, B)] }
+  //| [(0, B); (2, A); (6, O); (1, B)]  -> { KnownClosure = [(1, B); (9, O); (1, A)]; Cover = [(1, B); (9, O); (1, A)] }
+  //| [(1, B); (9, O); (1, A)]          -> { KnownClosure = [(0, B); (2, A); (6, O); (1, B)]; Cover = [(0, B); (2, A); (6, O); (1, B)] }
+  //| [(0, B); (2, A); (6, O); (1, B)]  -> { KnownClosure = [(2, A); (6, O); (1, B)]; Cover = [(2, A); (6, O); (1, B)] }
+  //| [(2, A); (6, O); (1, B)]          -> { KnownClosure = [(1, A); (4, O); (1, A); (1, O); (1, A)]; Cover = [(1, A); (4, O); (1, A); (1, O); (1, A)] }
+  //| [(1, A); (4, O); (1, A); (1, O); (1, A)] -> { KnownClosure = [(1, A); (2, O); (1, B); (1, O); (1, B)]; Cover = [(1, A); (2, O); (1, B); (1, O); (1, B)] }
+  //| [(1, A); (2, O); (1, B); (1, O); (1, B)] -> { KnownClosure = [(2, A); (2, O); (2, A)]; Cover = [(2, A); (2, O); (2, A)] }
+  //| [(2, A); (2, O); (2, A)]          -> { KnownClosure = [(1, A); (2, B)]; Cover = [(1, A); (2, B)] }
+  //| [(1, A); (2, B)]                  -> { KnownClosure = [(1, B); (2, A)]; Cover = [(1, B); (2, A)] }
+  //| [(1, B); (2, A)]                  -> { KnownClosure = [(1, B); (3, O); (1, A)]; Cover = [(1, B); (3, O); (1, A)] }
 
 
 
@@ -220,7 +221,7 @@ let main argv =
   let hashSet = HashSet()
 
 
-  let t1 = (decode [1, B; 10, O; 1, A])
+  let t1 = (decode [10, A; 2, O; 1, B])
   printfn "%A" t1
 
   for i in [t1..t1] do
