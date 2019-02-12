@@ -87,55 +87,123 @@ type Reduction = {
 }
 
 // Needs something that supports 0 as a pattern
-let rec reduce = function
-| (0, _)::t -> reduce t
-| A' (_, [])               -> { KnownClosure = [1, A]; Cover = [1, A] }
-| A' (_, [(1, B)])         -> { KnownClosure = [1, A]; Cover = [2, A] }
-| [(1, A); (2, O); (1, A)] -> { KnownClosure = [1, A]; Cover = [1, A; 1, B] }
+let rec reduce =
+  let rec go2 initial = function
+  | (0, _)::t -> go2 initial t
+  | [1, A] -> { KnownClosure = initial@[1, B]; Cover = initial@[1, B] }
+  | unhandled -> unhandled |> sprintf "unhandled %A" |> failwith 
 
-| [(1, B); (1, O); (1, A)] -> [1, A] (* [(1, A); (2, O); (1, A)] *)
-| [(1, B); (1, A)] -> [1, A] (* [(1, B); (1, O); (1, A)] *)
+  let rec go1 = function
+  | (0, _)::t -> go1 t
+  | A' (_, [])                        -> { KnownClosure = [1, A]; Cover = [1, A] }
+  | A' (_, [(1, B)])                  -> { KnownClosure = [1, A]; Cover = [2, A] }  
+  | [n, A; 1, O; 1, A] when n > 0     -> { KnownClosure = [1, A]; Cover = [1, B; 1, A] }
+  | [n, A; 2, O; 1, A] when n > 0     -> { KnownClosure = [1, A]; Cover = [1, A; 1, B] }
+  | [n, A; 3, O; 1, A] when n > 0     -> { KnownClosure = [1, A]; Cover = [1, A; 1, O; 1, B] }
+  | [n, A; 4, O; 1, A] when n > 0     -> { KnownClosure = [1, A]; Cover = [1, A; 2, O; 1, B] }
 
-| [(1, B)] -> [1, A] (* [(* (0, B); *) (2, A)] *)
-| [(1, A); (1, O); (1, A)] -> [1, A] // [(1, B); (1, A)]
+
+
+  | [1, A; 1, O; 1, B]            -> { KnownClosure = [1, A]; Cover = [1, B; 2, O; 1, A] }
+  | [n, A; 2, O; 1, B] when n > 0 -> { KnownClosure = [1, A]; Cover = [2, A; 1, O; 1, A] }
+
+  | [1, A; 1, B; 1, A] -> { KnownClosure = [1, A]; Cover = [1, B; 1, O; 1, A] }
+
+  | [1, B; 1, O; 1, A] -> { KnownClosure = [1, A]; Cover = [1, A; 2, O; 1, A] }
+  | [1, B; 2, O; 1, A] -> { KnownClosure = [1, A]; Cover = [1, A; 1, B; 1, A] }
+  | [1, B; 3, O; 1, A] -> { KnownClosure = [1, A]; Cover = [2, A; 1, B] }
+  | [1, B; 1, A]       -> { KnownClosure = [1, A]; Cover = [1, B; 1, O; 1, A] }
+  // Already handled case: [1, B]
+
+  // Doesn't yet reduce
+
+  | [1, A; 1, O; 1, A; 1, O; 1, A]    -> { KnownClosure = [1, B; 1, A; 1, B]; Cover = [1, B; 1, A; 1, B] }
+  | [1, B; 1, A; 1, B]                -> { KnownClosure = [1, B; 2, O; 2, A]; Cover = [1, B; 2, O; 2, A] }
+  | [1, B; 2, O; 2, A]                -> { KnownClosure = [1, B; 2, O; 2, A]; Cover = [1, A; 2, B; 1, A] }
+  | [1, A; 2, B; 1, A]                -> { KnownClosure = [2, B; 1, O; 1, A]; Cover = [2, B; 1, O; 1, A] }
+  | [2, B; 1, O; 1, A]                -> { KnownClosure = [1, B; 1, A; 2, O; 1, A]; Cover = [1, B; 1, A; 2, O; 1, A] }
+  | [1, B; 1, A; 2, O; 1, A]          -> { KnownClosure = [1, B; 1, O; 1, A; 1, B]; Cover = [1, B; 1, O; 1, A; 1, B] }
+  | [1, B; 1, O; 1, A; 1, B]          -> { KnownClosure = [1, A; 3, O; 2, A]; Cover = [1, A; 3, O; 2, A] }
+  | [1, A; 3, O; 2, A]                -> { KnownClosure = [1, A; 1, O; 2, B]; Cover = [1, A; 1, O; 2, B] }
+  | [1, A; 1, O; 2, B]                -> { KnownClosure = [1, B; 1, O; 1, B; 1, O; 1, A]; Cover = [1, B; 1, O; 1, B; 1, O; 1, A] }
+  | [1, B; 1, O; 1, B; 1, O; 1, A]    -> { KnownClosure = [1, A; 1, O; 1, A; 2, O; 1, A]; Cover = [1, A; 1, O; 1, A; 2, O; 1, A] }
+  | [1, A; 1, O; 1, A; 2, O; 1, A]    -> { KnownClosure = [1, B; 1, A; 1, O; 1, B]; Cover = [1, B; 1, A; 1, O; 1, B] }
+  | [1, B; 1, A; 1, O; 1, B]          -> { KnownClosure = [1, B; 1, O; 1, B; 2, O; 1, A]; Cover = [1, B; 1, O; 1, B; 2, O; 1, A] }
+  | [1, B; 1, O; 1, B; 2, O; 1, A]    -> { KnownClosure = [1, A; 1, O; 1, A; 1, B; 1, A]; Cover = [1, A; 1, O; 1, A; 1, B; 1, A] }
+  | [1, A; 1, O; 1, A; 1, B; 1, A]    -> { KnownClosure = [2, B; 1, O; 2, A]; Cover = [2, B; 1, O; 2, A] }
+  | [(2, B); (1, O); (2, A)]          -> { KnownClosure = [(1, B); (1, A); (4, O); (1, A)]; Cover = [(1, B); (1, A); (4, O); (1, A)] }
+  | [(2, B); (1, O); (2, A)]          -> { KnownClosure = [(1, B); (1, A); (4, O); (1, A)]; Cover = [(1, B); (1, A); (4, O); (1, A)] }
+  | [(1, B); (1, A); (4, O); (1, A)]  -> { KnownClosure = [(1, B); (1, O); (1, A); (2, O); (1, B)]; Cover = [(1, B); (1, O); (1, A); (2, O); (1, B)] }
+  | [(1, B); (1, O); (1, A); (2, O); (1, B)] -> { KnownClosure = [(1, A); (2, O); (2, A); (1, O); (1, A)]; Cover = [(1, A); (2, O); (2, A); (1, O); (1, A)] }
+  | [(1, A); (2, O); (2, A); (1, O); (1, A)] -> { KnownClosure = [(1, A); (2, B); (1, O); (1, B)]; Cover = [(1, A); (2, B); (1, O); (1, B)] }
+  | [(1, A); (2, B); (1, O); (1, B)]  -> { KnownClosure = [(1, B); (1, A); (1, O); (2, A)]; Cover = [(1, B); (1, A); (1, O); (2, A)] }
+  | [(1, B); (1, A); (1, O); (2, A)]  -> { KnownClosure = [(1, B); (1, O); (2, B); (1, A)]; Cover = [(1, B); (1, O); (2, B); (1, A)] }
+  | [(1, B); (1, O); (2, B); (1, A)]  -> { KnownClosure = [(1, A); (1, O); (2, B); (1, O); (1, A)]; Cover = [(1, A); (1, O); (2, B); (1, O); (1, A)] }
+  | [(1, A); (1, O); (2, B); (1, O); (1, A)] -> { KnownClosure = [(1, B); (1, O); (1, B); (3, O); (1, A)]; Cover = [(1, B); (1, O); (1, B); (3, O); (1, A)] }
+  | [(1, B); (1, O); (1, B); (3, O); (1, A)] -> { KnownClosure = [(1, A); (1, O); (2, A); (1, B)]; Cover = [(1, A); (1, O); (2, A); (1, B)] }
+  | [(1, A); (1, O); (2, A); (1, B)]  -> { KnownClosure = [(3, B); (2, O); (1, A)]; Cover = [(3, B); (2, O); (1, A)] }
+  | [(3, B); (2, O); (1, A)] -> { KnownClosure = [(2, B); (1, A); (1, B); (1, A)]; Cover = [(2, B); (1, A); (1, B); (1, A)] }
+  | [(2, B); (1, A); (1, B); (1, A)]  -> { KnownClosure = [(2, B); (2, O); (1, B); (1, O); (1, A)]; Cover = [(2, B); (2, O); (1, B); (1, O); (1, A)] }
+  | [(2, B); (2, O); (1, B); (1, O); (1, A)] -> { KnownClosure = [(1, B); (1, A); (1, B); (4, O); (1, A)]; Cover = [(1, B); (1, A); (1, B); (4, O); (1, A)] }
+  | [(1, B); (1, A); (1, B); (4, O); (1, A)] -> { KnownClosure = [(1, B); (2, O); (2, A); (1, O); (1, B)]; Cover = [(1, B); (2, O); (2, A); (1, O); (1, B)] }
+  | [(1, B); (2, O); (2, A); (1, O); (1, B)] -> { KnownClosure = [(1, A); (2, B); (2, A); (1, O); (1, A)]; Cover = [(1, A); (2, B); (2, A); (1, O); (1, A)] }
+  | [(1, A); (2, B); (2, A); (1, O); (1, A)] -> { KnownClosure = [(2, B); (3, O); (1, B); (1, A)]; Cover = [(2, B); (3, O); (1, B); (1, A)] }
+  | [(2, B); (3, O); (1, B); (1, A)]  -> { KnownClosure = [(1, B); (5, A)]; Cover = [(1, B); (5, A)] }
+  | [(1, B); (5, A)]                  -> { KnownClosure = [(1, B); (9, O); (1, A)]; Cover = [(1, B); (9, O); (1, A)] }
+  | [(1, B); (9, O); (1, A)]          -> { KnownClosure = [(0, B); (2, A); (6, O); (1, B)]; Cover = [(0, B); (2, A); (6, O); (1, B)] }
+  | [(0, B); (2, A); (6, O); (1, B)]  -> { KnownClosure = [(1, B); (9, O); (1, A)]; Cover = [(1, B); (9, O); (1, A)] }
+  | [(1, B); (9, O); (1, A)]          -> { KnownClosure = [(0, B); (2, A); (6, O); (1, B)]; Cover = [(0, B); (2, A); (6, O); (1, B)] }
+  | [(0, B); (2, A); (6, O); (1, B)]  -> { KnownClosure = [(2, A); (6, O); (1, B)]; Cover = [(2, A); (6, O); (1, B)] }
+  | [(2, A); (6, O); (1, B)]          -> { KnownClosure = [(1, A); (4, O); (1, A); (1, O); (1, A)]; Cover = [(1, A); (4, O); (1, A); (1, O); (1, A)] }
+  | [(1, A); (4, O); (1, A); (1, O); (1, A)] -> { KnownClosure = [(1, A); (2, O); (1, B); (1, O); (1, B)]; Cover = [(1, A); (2, O); (1, B); (1, O); (1, B)] }
+  | [(1, A); (2, O); (1, B); (1, O); (1, B)] -> { KnownClosure = [(2, A); (2, O); (2, A)]; Cover = [(2, A); (2, O); (2, A)] }
+  | [(2, A); (2, O); (2, A)]          -> { KnownClosure = [(1, A); (2, B)]; Cover = [(1, A); (2, B)] }
+  | [(1, A); (2, B)]                  -> { KnownClosure = [(1, B); (2, A)]; Cover = [(1, B); (2, A)] }
+  | [(1, B); (2, A)]                  -> { KnownClosure = [(1, B); (3, O); (1, A)]; Cover = [(1, B); (3, O); (1, A)] }
+
+
+
+  | [n, A; 3, O; 1, B] when n > 0 -> { KnownClosure = [1, A; 1, O; 1, A; 1, O; 1, A]; Cover = [1, A; 1, O; 1, A; 1, O; 1, A] }
+
+  // Check again
+  //| A' (n, O' (m, [1, A])) when n > 0 -> { KnownClosure = [1, A]; Cover = [1, A; m - 2, O; 1, B] }
+
+
+
+
+
+  | [n, B]             -> { KnownClosure = [n - 1, B; 2, A]; Cover = [n - 1, B; 2, A] }
+  | B'(n, A'(m, []))   -> { KnownClosure = [n, B; 2 * m - 1, O; 1, A]; Cover = [n, B; 2 * m - 1, O; 1, A] }
+  | B'(n, O'(m, [k, A])) when n > 0 && m > 3 -> { KnownClosure = [n - 1, B; 2, A; m - 3, O; k, B]; Cover = [n - 1, B; 2, A; m - 3, O; k, B] }
+
+  | [n, B; 2, O; m, A] when n > 5 && m > 5 -> { KnownClosure = [n - 1, B; 1, A; m, B; 1, A]; Cover = [n - 1, B; 1, A; m, B; 1, A] }
+
+  
+  //| [1, A; 1, O; 1, B] -> { KnownClosure = [(1, B); (2, O); (1, A)]; Cover = [(1, B); (2, O); (1, A)] }
+
+
+
+
+  //| A'(1, O'(n, t))      when n > 2 -> go2 [1, A; n - 2, O] t
+  
+  //| [1, A; n, O; 1, B] when n > 2 -> { KnownClosure = [(1, A); (n - 2, O); (1, A); (1, O); (1, A)] ; Cover = [(1, A); (n - 2, O); (1, A); (1, O); (1, A)] }
+
+  
+  | unhandled -> unhandled |> sprintf "unhandled %A" |> failwith 
+  
+  go1
+
+  
+//  function
 
 //Doesn't yet reduce
 
-| [(n, B)] -> [(n - 1, B); (2, A)]
-| [(1, A); (n, O); (1, A)] when n > 2 -> [(1, A); (n - 2, O); (1, B)]
+//| [1, A; n, O; 1, B] when n > 2 -> { KnownClosure = [(1, A); (n - 2, O); (1, A); (1, O); (1, A)] ; Cover = [(1, A); (n - 2, O); (1, A); (1, O); (1, A)] }
+//[1, A; 0, O; 1, B] is already another case
 
-| [(1, A); (n, O); (1, B)] when n > 2 -> [(1, A); (n - 2, O); (1, A); (1, O); (1, A)]
-| [(1, A); (2, O); (1, B)]            -> [(2, A); (1, O); (1, A)]
-| [(1, A); (1, O); (1, B)]            -> [(1, B); (2, O); (1, A)]
-//[(1, A); (0, O); (1, B)] is already another case
+//| [1, A; n, O; 1, A; 1, O; 1, A] when n > 2 -> { KnownClosure = [1, A; n - 2, O; 1, B; 1, O; 1, B]; Cover = [1, A; n - 2, O; 1, B; 1, O; 1, B] }
+//| [1, A; n, O; 1, B; 1, O; 1, B] when n > 2 -> { KnownClosure = [1, A; n - 2, O; 1, B; 1, O; 1, B]; Cover = [1, A; n - 2, O; 1, A; 2, O; 1, A] }
 
-
-
-
-// (suspect) | [(2, A); (1, O); (1, A)] -> [(1, B); (1, A)]
-
-
-
-
-
-
-// TODO The resulting output pattern is not found earlier, and therefore doesn't reduce
-//| [(1, B); (2, O); (1, A)] -> [(1, A); (1, B); (1, A)]
-
-
-
-
-//| [(1, A); (n, O); (1, B)] when n >= 2 -> [(1, A); (n - 2, O); (1, A); (1, O); (1, A)]
-//| [(1, B); (1, O); (1, B)] -> [(1, A); (1, O); (2, A)]
-//| [(1, A); (1, B); (1, A)] -> [(1, B); (1, O); (1, A)]
-//
-//| [(1, B); (2, A)] -> [(1, B); (3, O); (1, A)]
-
-// AA0A -> BA
-// A0AA -> AB
-
-
-| unhandled -> unhandled |> sprintf "unhandled %A" |> failwith 
 
 let equivClass value =
   let rec go input =
@@ -152,7 +220,7 @@ let main argv =
   let hashSet = HashSet()
 
 
-  let t1 = (decode [(1, A); (1, O); (1, B)])
+  let t1 = (decode [1, B; 10, O; 1, A])
   printfn "%A" t1
 
   for i in [t1..t1] do
@@ -164,15 +232,31 @@ let main argv =
     if not (hashSet.Contains result) then
       hashSet.Add result |> ignore
 
-      let r1 = encode3 result
-      let r2 = encode3 (Collatz1 result |> equivClass)
+      let mutable r1 = encode3 result
+      let mutable r2 = encode3 (Collatz1 result |> equivClass)
       
       try       
-        let r3 = reduce r1
+        let { KnownClosure = r3 } = reduce r1
         if r3 <> [(1, A)] then
           printfn "%A = %A -> %A" result r1 r3
       with
       | _ ->
-        printfn "* FAIL - %A → %A" r1 r2
+        printfn "  | %A -> { KnownClosure = %A; Cover = %A }" r1 r2 r2
+
+        while r1 <> [1, A] do
+          let r3 =
+            try
+              (reduce r1).KnownClosure
+            with
+            | _ -> 
+              result <- Collatz1 result |> equivClass
+              encode3 result
+            
+          
+          if r3 <> [(1, A)] then
+            printfn "| %A -> { KnownClosure = %A; Cover = %A }" r1 r3 r3
+
+          r1 <- r3
+        //printfn "* FAIL - %A -> { KnownClosure = %A; Cover = %A }" r1 r2 r2
 
   0 // return an integer exit code
