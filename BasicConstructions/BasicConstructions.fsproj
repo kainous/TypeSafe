@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Arrow.fs" />
+    <Compile Include="Algebras.fs" />
+    <Compile Include="Orders.fs" />
+    <Compile Include="BooleanLogic.fs" />
+    <Compile Include="NaturalNumbers.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+</Project>

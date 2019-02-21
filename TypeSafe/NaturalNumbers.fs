@@ -1,10 +1,15 @@
 ﻿namespace TypeSafe
 
 module NaturalNumbers =
-  type Nat = interface end
+  type Nat =
+    abstract Successor : Nat
+    abstract AddTo     : Nat -> Nat
 
   and Zero = Z with
-    interface Nat    
+    interface Nat with
+      member this.Successor with get() = S this :> Nat
+      member   __.AddTo other = other
+
     static member inline (!++) (Z) = S Z
     static member inline ( + ) (Z, x : #Nat ) = x
     static member inline ( * ) (Z, x : #Nat ) = Z
@@ -16,8 +21,13 @@ module NaturalNumbers =
     static member inline (<%>) (_ : #Nat, Z) = Z
     static member inline (<&&&>) (Z, x) = x
 
+
   and Succ< 'T when 'T :> Nat > = S of 'T with
-    interface Nat
+    member this.Predecessor with get() = match this with S x -> x
+    interface Nat with
+      member this.Successor with get() = S this :> Nat
+      member this.AddTo other = this.Predecessor()
+      
     static member inline (!++) (S _ as x) = S x    
     static member inline ( + ) (S x, y) = S (x + y)
     static member inline ( * ) (S x, y) = y + (x * y)
@@ -29,6 +39,7 @@ module NaturalNumbers =
     static member inline (<<=) (S x, S y) = x <<= y
     static member inline (===) (S _, Z) = False
     static member inline (===) (S x, S y) = (x === y)
+
 
   type Z0 = Zero
   type Z1 = Succ<Z0>
@@ -42,7 +53,14 @@ module NaturalNumbers =
   let Z3_ = S Z2_
   let Z4_ = S Z3_
 
-  let inline LeftIdentity (a) = a + Z0_ //Eq(a + Z0_, Z0_ + a)
+  let inline LeftIdentity (a) = a + Z //Eq(a + Z0_, Z0_ + a)
+
+  //let sdf = LeftIdentity Z3_
+
+  //let inline RightIdentity (Z ) = Z0_ + a // We know that  (S Z) + a = S (Z + a), can we show that this implies that Z + a = a?
+  //let inline RightIdentity (S a) = Z0_ + a // We know that  (S Z) + a = S (Z + a), can we show that this implies that Z + a = a?
+  //let RightIdentityBasis = Z0_ + Z0_
+
   //let LeftIdentity1 = LeftIdentity Z1_
 
   //let s = Z3_ <&&&> Z1_ //Type inference too complicated
@@ -60,7 +78,7 @@ module NaturalNumbers =
       Nil
 
   and Cons<'TItem, 'TList when 'TList :> List > = Cons of 'TItem * 'TList with
-    interface List<'TItem>
+    interface List
     static member inline ( >>= ) (Cons(item, list), f) =
       Cons(f item, list >>= f)  
 
