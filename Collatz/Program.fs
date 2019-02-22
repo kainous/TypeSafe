@@ -81,6 +81,9 @@ let (|A'|) = (|OBJ'|) A
 let (|B'|) = (|OBJ'|) B
 let (|O'|) = (|OBJ'|) O
 
+let (|A''|) = function
+| A'(_, tail) -> tail
+
 type Reduction = {
   Cover : (int * Collat) list
   KnownClosure : (int * Collat) list
@@ -94,44 +97,70 @@ let rec reduce =
   | unhandled -> unhandled |> sprintf "unhandled %A" |> failwith 
 
   let rec go1 = function
+  | [0, O]          -> { KnownClosure = [1, A]; Cover = [1, A] }
   | (0, _)::t -> go1 t
-  | A' (_, [])                        -> { KnownClosure = [1, A]; Cover = [1, A] }
-  | A' (_, [(1, B)])                  -> { KnownClosure = [1, A]; Cover = [2, A] }  
-  | [n, A; 1, O; 1, A] when n > 0     -> { KnownClosure = [1, A]; Cover = [1, B; 1, A] }
-  | [n, A; 2, O; 1, A] when n > 0     -> { KnownClosure = [1, A]; Cover = [1, A; 1, B] }
-  | [n, A; 3, O; 1, A] when n > 0     -> { KnownClosure = [1, A]; Cover = [1, A; 1, O; 1, B] }
-  | [n, A; 4, O; 1, A] when n > 0     -> { KnownClosure = [1, A]; Cover = [1, A; 2, O; 1, B] }
+  | A''[]                 -> { KnownClosure = [1, A]; Cover = [1, A] }
+  | A''[1, B]             -> { KnownClosure = [1, A]; Cover = [2, A] }
+  | A''[1, O; 1, A]       -> { KnownClosure = [1, A]; Cover = [1, B; 1, A] }
+  | A''[2, O; 1, A]       -> { KnownClosure = [1, A]; Cover = [1, A; 1, B] }
+  | A''[3, O; 1, A]       -> { KnownClosure = [1, A]; Cover = [1, A; 1, O; 1, B] }
+  | A''[4, O; 1, A]       -> { KnownClosure = [1, A]; Cover = [1, A; 2, O; 1, B] }
+   
+  | A''[1, O; 1, B]       -> { KnownClosure = [1, A]; Cover = [1, B; 2, O; 1, A] }
+  | A''[2, O; 1, B]       -> { KnownClosure = [1, A]; Cover = [2, A; 1, O; 1, A] }
+  
+  | A''[1, B; 1, A]       -> { KnownClosure = [1, A]; Cover = [1, B; 1, O; 1, A] }
+  | A''[1, B; 2, A]       -> { KnownClosure = [1, A]; Cover = [1, B; 3, O; 1, A] }
+  | A''[1, B; 3, A]       -> { KnownClosure = [1, A]; Cover = [1, B; 5, O; 1, A] }
+
+  | A''[1, B;       1, A] -> { KnownClosure = [1, A]; Cover = [1, B; 1, O; 1, A] }
+  | A''[1, B; 1, O; 1, A] -> { KnownClosure = [1, A]; Cover = [1, A; 2, O; 1, A] }
+  | A''[1, B; 2, O; 1, A] -> { KnownClosure = [1, A]; Cover = [1, A; 1, B; 1, A] }
+  | A''[1, B; 3, O; 1, A] -> { KnownClosure = [1, A]; Cover = [2, A; 1, B] }
+  | A''[1, B; 4, O; 1, A] -> { KnownClosure = [1, A]; Cover = [2, A; 1, O; 1, B] }
+  | A''[1, B; 5, O; 1, A] -> { KnownClosure = [1, A]; Cover = [2, A; 2, O; 1, B] }
+
+  | A''[2, O; 1, B; 1, A] -> { KnownClosure = [1, A]; Cover = [4, A] }
+  
+  | A''[1, O; 1, B; 1, O; 1, A] -> { KnownClosure = [1, A]; Cover = [1, B; 4, O; 1, A] }
+  | A''[1, O; 1, B; 1, O; 1, A] -> { KnownClosure = [1, A]; Cover = [1, B; 4, O; 1, A] }
 
 
+  | A''[                        (1, B); (3, O); (1, B); (1, A)] -> { KnownClosure = [1, A]; Cover = [5, A] }
+  | A''[        (2, O); (1, B); (1, A); (2, O); (1, B); (1, A)] -> { KnownClosure = [1, A]; Cover = [7, A] }
+  | A''[(1, B); (3, O); (1, B); (1, A); (2, O); (1, B); (1, A)] -> { KnownClosure = [1, A]; Cover = [8, A] }
 
-  | [1, A; 1, O; 1, B]            -> { KnownClosure = [1, A]; Cover = [1, B; 2, O; 1, A] }
-  | [n, A; 2, O; 1, B] when n > 0 -> { KnownClosure = [1, A]; Cover = [2, A; 1, O; 1, A] }
+  | [(1, A); (2, O); (1, B); (1, A); (2, O); (1, B); (1, A); (2, O); (1, B); (1, A)]  -> { KnownClosure = [1, A]; Cover = [10, A] }
 
-  | [1, A; 1, B; 1, A] -> { KnownClosure = [1, A]; Cover = [1, B; 1, O; 1, A] }
-
-  | [1, B; 1, O; 1, A] -> { KnownClosure = [1, A]; Cover = [1, A; 2, O; 1, A] }
-  | [1, B; 2, O; 1, A] -> { KnownClosure = [1, A]; Cover = [1, A; 1, B; 1, A] }
-  | [1, B; 3, O; 1, A] -> { KnownClosure = [1, A]; Cover = [2, A; 1, B] }
-
-  | [1, B; 1, A]       -> { KnownClosure = [1, A]; Cover = [1, B; 1, O; 1, A] }
+  | A''[                                (2, O); (1, B); (1, A); (2, O); (1, A)] -> { KnownClosure = [1, A]; Cover = [4, A; 1, B] }
+  | A''[                        (1, B); (3, O); (1, B); (1, A); (2, O); (1, A)] -> { KnownClosure = [1, A]; Cover = [5, A; 1, B] }
+  | A''[        (2, O); (1, B); (1, A); (2, O); (1, B); (1, A); (2, O); (1, A)] -> { KnownClosure = [1, A]; Cover = [7, A; 1, B] }
+  | A''[(1, B); (3, O); (1, B); (1, A); (2, O); (1, B); (1, A); (2, O); (1, A)] -> { KnownClosure = [1, A]; Cover = [8, A; 1, B] }
   // Already handled case: [1, B]
 
   // Doesn't yet reduce
+  | A''[1, O; 2, A] -> { KnownClosure = [2, B; 1, A]; Cover = [2, B; 1, A]}
+  | [2, B; 1, A] -> { KnownClosure = [2, B; 1, O; 1, A]; Cover = [2, B; 1, O; 1, A]}
+  | [2, B; 1, O; 1, A] -> { KnownClosure = [1, B; 1, A; 2, O; 1, A]; Cover = [1, B; 1, A; 2, O; 1, A]}
+  
+  | [n, B; m, A] when n > 1 && m > 1         -> { KnownClosure = [n, B; 2 * m - 1, O; 1, A]; Cover = [n, B; 2 * m - 1, O; 1, A]}
+  | [n, B; 1, O; m, A] when n >= 1 && m >= 1 -> { KnownClosure = [n - 1, B; 1, A; 2 * m, O; 1, A]; Cover = [n - 1, B; 1, A; 2 * m, O; 1, A]}
 
-  | [1, A; 1, O; 1, A; 1, O; 1, A]    -> { KnownClosure = [1, B; 1, A; 1, B]; Cover = [1, B; 1, A; 1, B] }
-  | [1, B; 1, A; 1, B]                -> { KnownClosure = [1, B; 2, O; 2, A]; Cover = [1, B; 2, O; 2, A] }
-  | [1, B; 2, O; 2, A]                -> { KnownClosure = [1, B; 2, O; 2, A]; Cover = [1, A; 2, B; 1, A] }
-  | [1, A; 2, B; 1, A]                -> { KnownClosure = [2, B; 1, O; 1, A]; Cover = [2, B; 1, O; 1, A] }
-  | [2, B; 1, O; 1, A]                -> { KnownClosure = [1, B; 1, A; 2, O; 1, A]; Cover = [1, B; 1, A; 2, O; 1, A] }
-  | [1, B; 1, A; 2, O; 1, A]          -> { KnownClosure = [1, B; 1, O; 1, A; 1, B]; Cover = [1, B; 1, O; 1, A; 1, B] }
-  | [1, B; 1, O; 1, A; 1, B]          -> { KnownClosure = [1, A; 3, O; 2, A]; Cover = [1, A; 3, O; 2, A] }
-  | [1, A; 3, O; 2, A]                -> { KnownClosure = [1, A; 1, O; 2, B]; Cover = [1, A; 1, O; 2, B] }
-  | [1, A; 1, O; 2, B]                -> { KnownClosure = [1, B; 1, O; 1, B; 1, O; 1, A]; Cover = [1, B; 1, O; 1, B; 1, O; 1, A] }
-  | [1, B; 1, O; 1, B; 1, O; 1, A]    -> { KnownClosure = [1, A; 1, O; 1, A; 2, O; 1, A]; Cover = [1, A; 1, O; 1, A; 2, O; 1, A] }
-  | [1, A; 1, O; 1, A; 2, O; 1, A]    -> { KnownClosure = [1, B; 1, A; 1, O; 1, B]; Cover = [1, B; 1, A; 1, O; 1, B] }
-  | [1, B; 1, A; 1, O; 1, B]          -> { KnownClosure = [1, B; 1, O; 1, B; 2, O; 1, A]; Cover = [1, B; 1, O; 1, B; 2, O; 1, A] }
-  | [1, B; 1, O; 1, B; 2, O; 1, A]    -> { KnownClosure = [1, A; 1, O; 1, A; 1, B; 1, A]; Cover = [1, A; 1, O; 1, A; 1, B; 1, A] }
-  | [1, A; 1, O; 1, A; 1, B; 1, A]    -> { KnownClosure = [2, B; 1, O; 2, A]; Cover = [2, B; 1, O; 2, A] }
+  //| A''[2, O; 1, B] -> [1, A; 1, O; 1, A; 1, O; 1, A]
+  //| [1, A; 1, O; 1, A; 1, O; 1, A]    -> { KnownClosure = [1, B; 1, A; 1, B]; Cover = [1, B; 1, A; 1, B] }
+  //| [1, B; 1, A; 1, B]                -> { KnownClosure = [1, B; 2, O; 2, A]; Cover = [1, B; 2, O; 2, A] }
+  //| [1, B; 2, O; 2, A]                -> { KnownClosure = [1, B; 2, O; 2, A]; Cover = [1, A; 2, B; 1, A] }
+  //| [1, A; 2, B; 1, A]                -> { KnownClosure = [2, B; 1, O; 1, A]; Cover = [2, B; 1, O; 1, A] }
+  //| [2, B; 1, O; 1, A]                -> { KnownClosure = [1, B; 1, A; 2, O; 1, A]; Cover = [1, B; 1, A; 2, O; 1, A] }
+  //| [1, B; 1, A; 2, O; 1, A]          -> { KnownClosure = [1, B; 1, O; 1, A; 1, B]; Cover = [1, B; 1, O; 1, A; 1, B] }
+  //| [1, B; 1, O; 1, A; 1, B]          -> { KnownClosure = [1, A; 3, O; 2, A]; Cover = [1, A; 3, O; 2, A] }
+  //| [1, A; 3, O; 2, A]                -> { KnownClosure = [1, A; 1, O; 2, B]; Cover = [1, A; 1, O; 2, B] }
+  //| [1, A; 1, O; 2, B]                -> { KnownClosure = [1, B; 1, O; 1, B; 1, O; 1, A]; Cover = [1, B; 1, O; 1, B; 1, O; 1, A] }
+  //| [1, B; 1, O; 1, B; 1, O; 1, A]    -> { KnownClosure = [1, A; 1, O; 1, A; 2, O; 1, A]; Cover = [1, A; 1, O; 1, A; 2, O; 1, A] }
+  //| [1, A; 1, O; 1, A; 2, O; 1, A]    -> { KnownClosure = [1, B; 1, A; 1, O; 1, B]; Cover = [1, B; 1, A; 1, O; 1, B] }
+  //| [1, B; 1, A; 1, O; 1, B]          -> { KnownClosure = [1, B; 1, O; 1, B; 2, O; 1, A]; Cover = [1, B; 1, O; 1, B; 2, O; 1, A] }
+  //| [1, B; 1, O; 1, B; 2, O; 1, A]    -> { KnownClosure = [1, A; 1, O; 1, A; 1, B; 1, A]; Cover = [1, A; 1, O; 1, A; 1, B; 1, A] }
+  //| [1, A; 1, O; 1, A; 1, B; 1, A]    -> { KnownClosure = [2, B; 1, O; 2, A]; Cover = [2, B; 1, O; 2, A] }
   //| [(2, B); (1, O); (2, A)]          -> { KnownClosure = [(1, B); (1, A); (4, O); (1, A)]; Cover = [(1, B); (1, A); (4, O); (1, A)] }
   //| [(2, B); (1, O); (2, A)]          -> { KnownClosure = [(1, B); (1, A); (4, O); (1, A)]; Cover = [(1, B); (1, A); (4, O); (1, A)] }
   //| [(1, B); (1, A); (4, O); (1, A)]  -> { KnownClosure = [(1, B); (1, O); (1, A); (2, O); (1, B)]; Cover = [(1, B); (1, O); (1, A); (2, O); (1, B)] }
@@ -164,7 +193,7 @@ let rec reduce =
 
 
 
-  | [n, A; 3, O; 1, B] when n > 0 -> { KnownClosure = [1, A; 1, O; 1, A; 1, O; 1, A]; Cover = [1, A; 1, O; 1, A; 1, O; 1, A] }
+  //| [n, A; 3, O; 1, B] when n > 0 -> { KnownClosure = [1, A; 1, O; 1, A; 1, O; 1, A]; Cover = [1, A; 1, O; 1, A; 1, O; 1, A] }
 
   // Check again
   //| A' (n, O' (m, [1, A])) when n > 0 -> { KnownClosure = [1, A]; Cover = [1, A; m - 2, O; 1, B] }
@@ -173,11 +202,11 @@ let rec reduce =
 
 
 
-  | [n, B]             -> { KnownClosure = [n - 1, B; 2, A]; Cover = [n - 1, B; 2, A] }
-  | B'(n, A'(m, []))   -> { KnownClosure = [n, B; 2 * m - 1, O; 1, A]; Cover = [n, B; 2 * m - 1, O; 1, A] }
-  | B'(n, O'(m, [k, A])) when n > 0 && m > 3 -> { KnownClosure = [n - 1, B; 2, A; m - 3, O; k, B]; Cover = [n - 1, B; 2, A; m - 3, O; k, B] }
-
-  | [n, B; 2, O; m, A] when n > 5 && m > 5 -> { KnownClosure = [n - 1, B; 1, A; m, B; 1, A]; Cover = [n - 1, B; 1, A; m, B; 1, A] }
+  //| [n, B]             -> { KnownClosure = [n - 1, B; 2, A]; Cover = [n - 1, B; 2, A] }
+  //| B'(n, A'(m, []))   -> { KnownClosure = [n, B; 2 * m - 1, O; 1, A]; Cover = [n, B; 2 * m - 1, O; 1, A] }
+  //| B'(n, O'(m, [k, A])) when n > 0 && m > 3 -> { KnownClosure = [n - 1, B; 2, A; m - 3, O; k, B]; Cover = [n - 1, B; 2, A; m - 3, O; k, B] }
+  //
+  //| [n, B; 2, O; m, A] when n > 5 && m > 5 -> { KnownClosure = [n - 1, B; 1, A; m, B; 1, A]; Cover = [n - 1, B; 1, A; m, B; 1, A] }
 
   
   //| [1, A; 1, O; 1, B] -> { KnownClosure = [(1, B); (2, O); (1, A)]; Cover = [(1, B); (2, O); (1, A)] }
@@ -220,44 +249,307 @@ let equivClass value =
 let main argv =
   let hashSet = HashSet()
 
-
-  let t1 = (decode [10, A; 2, O; 1, B])
-  printfn "%A" t1
-
-  for i in [t1..t1] do
+  let rec f i =
     let mutable result = i |> equivClass
     let test = (decode (encode3 result))
+
+    if i % 100000I = 0I then
+      printfn "%A" i
+
     if result <> test then
       printfn "%A <> %A" result test
       assert (false)
-    if not (hashSet.Contains result) then
+    if (hashSet.Contains result) then
+      f (i + 1I)
+    else
       hashSet.Add result |> ignore
 
       let mutable r1 = encode3 result
-      let mutable r2 = encode3 (Collatz1 result |> equivClass)
+      result <- Collatz1 result |> equivClass
+      result <- Collatz1 result |> equivClass
+      let mutable r2 = encode3 result
+
+      //match r1, r2 with
+      //| _, [1, A]    -> 
+      printfn "%A -> %A" r1 r2
+      //  ()
+      //| _ ->  ()
       
-      try       
-        let { KnownClosure = r3 } = reduce r1
-        if r3 <> [(1, A)] then
-          printfn "%A = %A -> %A" result r1 r3
-      with
-      | _ ->
-        printfn "  | %A -> { KnownClosure = %A; Cover = %A }" r1 r2 r2
+      f (i + 1I)
+      
+      //try       
+      //  let { KnownClosure = r3 } = reduce r1
+      //  if r3 <> [(1, A)] then
+      //    printfn "%A = %A -> %A" result r1 r3
+      //with
+      //| _ ->
+      //  printfn "  | %A -> { KnownClosure = %A; Cover = %A }" r1 r2 r2
+      //
+      //  while r1 <> [1, A] do
+      //    let r3 =
+      //      try
+      //        (reduce r1).KnownClosure
+      //      with
+      //      | _ -> 
+      //        result <- Collatz1 result |> equivClass
+      //        encode3 result
+      //      
+      //    
+      //    if r3 <> [(1, A)] then
+      //      printfn "| %A -> { KnownClosure = %A; Cover = %A }" r1 r3 r3
 
-        while r1 <> [1, A] do
-          let r3 =
-            try
-              (reduce r1).KnownClosure
-            with
-            | _ -> 
-              result <- Collatz1 result |> equivClass
-              encode3 result
-            
-          
-          if r3 <> [(1, A)] then
-            printfn "| %A -> { KnownClosure = %A; Cover = %A }" r1 r3 r3
-
-          r1 <- r3
+      //    r1 <- r3
         //printfn "* FAIL - %A -> { KnownClosure = %A; Cover = %A }" r1 r2 r2
 
+  //f 1I
+
+  let mutable result = decode [1, B; 80, O; 1, B; 1, O; 1, B; 1, O; 1, B]
+  let mutable r1 = encode3 result
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+
+  
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  
+
+  
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  
+  
+  result <- Collatz1 result |> equivClass
+  result <- Collatz1 result |> equivClass
+  
+  
+  let mutable r2 = encode3 result
+
+  printfn "%A" r1 
+  printfn "%A" r2
+
+  Console.ReadLine() |> ignore
   0 // return an integer exit code

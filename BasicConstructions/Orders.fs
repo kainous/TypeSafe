@@ -21,6 +21,7 @@ type Lattice<'TValue, 'TLogic> =
 
 type LatticeNode<'TValue, 'TLogic when 'TValue :> LatticeNode<'TValue, 'TLogic> > =
   inherit PartialOrder<'TValue, 'TLogic>
+  inherit RingObject<'TValue, 'TValue>
 
 type Heyting<'TValue, 'TLogic> =
   inherit Lattice<'TValue, 'TLogic>
@@ -38,4 +39,4 @@ type TotallyOrderedObject<'TValue, 'TLogic when 'TValue :> Heyting<'TValue, 'TLo
   inherit HeytingNode<'TValue, 'TLogic>
 
 let ( --> ) (a:'TValue when 'TValue :> Preorder<_,_>) (b:'TValue) =
-  a.CanReach b
+  a.CanReach a b
