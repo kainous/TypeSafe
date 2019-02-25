@@ -1,26 +1,57 @@
 ﻿module Algebras
 
-type Magma<'T> =
-  abstract Op : 'T -> 'T -> 'T
+type BinaryOperation<'T> =
+  abstract Glom : 'T -> 'T -> 'T
 
-type MagmaObject<'TMagma, 'T when 'TMagma :> MagmaObject<'TMagma, 'T> > =
-  inherit Magma<'TMagma>
+// Left-Identity element != Right-Identity Element - is partial due to 0^0
+type Exponential<'T> =
+  inherit BinaryOperation<'T>
 
-type ExponentialMagma<'T> =
-  inherit Magma<'T>
+// Implies associativity of the Binary Operation
+type AssociativeOperation<'T> =
+  inherit BinaryOperation<'T>
 
-type ExponentialMagmaObject<'TWrapper, 'T when 'TWrapper :> ExponentialMagmaObject<'TWrapper, 'T> > =
-  inherit ExponentialMagma<'T>
+type CommutativeOperation<'T> =
+  inherit BinaryOperation<'T>
 
-// Closed Monoidal Category
+
+// a.k.a. Closed Monoidal Category
+// Property that 
 type Monoid<'T> =
-  inherit Magma<'T>
+  inherit BinaryOperation<'T>
+
+type Magma<'TObject, 'TOperation when 'TOperation :> BinaryOperation<'TObject> > = Magma of Op:'TOperation
+
+// This fails to make Op show as exponential
+type ExponentialMagma< 'TObject, 'TOperation when 'TOperation :> Exponential<'TObject> > =
+  ExponentialMagma of Op:'TOperation
+
+
 
 type MonoidObject<'TMonoid, 'T when 'TMonoid :> MonoidObject<'TMonoid, 'T> > =
   inherit Monoid<'TMonoid>
 
-type AbelianGroup<'T> =
+type CommutativeMonoid<'T> =
   inherit Monoid<'T>
+
+type CommutativeMonoidObject<'TWrapper, 'T when 'TWrapper :> CommutativeMonoidObject<'TWrapper, 'T> > =
+  inherit CommutativeMonoid<'TWrapper>
+
+type CommutativeGroup<'T> =
+  inherit Monoid<'T>
+
+type FieldLike<'TCoproduct, 'TProduct> =
+  abstract Coproduct : 'TCoproduct
+  abstract Product   : 'TProduct
+
+type Semiring<'T> =
+  inherit FieldLike<AbelianMonoid<'T>, Monoid<'T>>
+
+type Ring<'T> =
+  inherit FieldLike<AbelianGroup<'T>, Monoid<'T>>
+
+type Field<'T> =
+  inherit FieldLike<AbelianGroup<'T>, Group<'T>>
 
 type Ring<'T> =
   abstract Coproduct : AbelianGroup<'T>
@@ -38,7 +69,7 @@ type ExponentialRingObject<'TWrapper, 'T when 'TWrapper :> ExponentialRingObject
   inherit ExponentialRing<'T>
   inherit RingObject<'TWrapper, 'T>
 
-let ( <*> ) (a : 'TMagma when 'TMagma :> MagmaObject<'TMagma, 'T>) b = a.Op a b
+let ( <*> ) (a : 'TMagma when 'TMagma :> Magma<'TMagma, 'T>) b = a.Op a b
 let (  +  ) (a : 'TRing when 'TRing :> RingObject<'TRing, 'T> ) b = a.Coproduct.Op a b
 let (  *  ) (a : 'TRing when 'TRing :> RingObject<'TRing, 'T> ) b = a.Product.Op a b
 let (  ** ) (a : 'TRing when 'TRing :> ExponentialRingObject<'TRing, 'T> ) b = a.Exponential.Op a b

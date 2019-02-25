@@ -1,5 +1,7 @@
 ﻿open System.Diagnostics
 
+
+
 module NaturalNumbers =
   [<DebuggerDisplay("{ToString(),nq}")>]
   type Nat = Z | S of Nat with

@@ -12,6 +12,7 @@
     <Compile Include="Boolean.fs" />
     <Compile Include="Option.fs" />
     <Compile Include="NaturalNumbers.fs" />
+    <Compile Include="Lambda.fs" />
     <Compile Include="Surreals.fs" />
     <Compile Include="HyperNaturals.fs" />
     <Compile Include="Integers.fs" />

@@ -79,6 +79,7 @@ with
     { new TotallyOrderedObject<Nat, Bool> with
         member __.Coproduct = { new AbelianGroup<Nat> with member __.Op a b = if (a .CanReach b) = T then a else b }
         member __.Product = { new Monoid<Nat> with member __.Op a b = if (a .CanReach b) = T then b else a }
+        member __.Exponentiate = { new ExponentialMagma<Nat> with member __.Op a b = a.Subtract b }
         member __.CanReach a b = a.CanReach b }
 
   member __.Divisibility =
