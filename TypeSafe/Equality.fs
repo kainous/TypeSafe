@@ -25,14 +25,14 @@
 
   type List<'T> = interface end
 
-  type Cons<'Head, 'Tail when 'Tail :> List<'Head> > = Cons of ('Head * 'Tail) with
+  type Cons<'Head, 'Tail when 'Tail :> List<'Head> > = Cons of (unit -> 'Head * 'Tail) with
     interface List<'Head>
-    static member inline ( ^+ ) (a : 'Head, b : #List<'Head> ) = Cons(a, b)
-    static member inline ( ++ ) (Cons(ah:'Head, at), (b : #List<'Head>)) = Cons(ah, at ++ b)
+    static member inline ( ^+ ) (a : 'Head, b : #List<'Head> ) = Cons <| fun () -> (a, b)
+    static member inline ( ++ ) (((Cons a) : Cons<'Head,_>), (b : #List<'Head>)) = match a() with ah:'Head,at -> Cons <| fun () -> (ah, at ++ b)
 
   type Nil<'T> = private Nil of unit with
     interface List<'T>
-    static member inline ( ^+ ) (a : 'T, _ : Nil<'T>) = Cons(a, Nil())
+    static member inline ( ^+ ) (a : 'T, _ : Nil<'T>) = Cons <| fun () -> (a, Nil())
     static member inline ( ++ ) (a : 'Head when 'Head :> #List<'T>, _:Nil<'T>) = a
     static member inline ( ++ ) (_:Nil<'T>, b : 'Head when 'Head :> #List<'T>) = b
 
