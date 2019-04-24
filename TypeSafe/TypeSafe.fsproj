@@ -6,6 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Equality.fs" />
+    <Compile Include="FreeMonad.fs" />
     <Compile Include="Ordering.fs" />
     <Compile Include="Semigroupoids.fs" />
     <Compile Include="Functional.fs" />

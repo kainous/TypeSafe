@@ -3,12 +3,12 @@
 module NaturalNumbers =
   type Nat =
     abstract Successor : Nat
-    abstract AddTo     : Nat -> Nat
+    //abstract AddTo     : Nat -> Nat
 
   and Zero = Z with
     interface Nat with
       member this.Successor with get() = S this :> Nat
-      member   __.AddTo other = other
+      //member   __.AddTo other = other
 
     static member inline (!++) (Z) = S Z
     static member inline ( + ) (Z, x : #Nat ) = x
@@ -26,7 +26,7 @@ module NaturalNumbers =
     member this.Predecessor with get() = match this with S x -> x
     interface Nat with
       member this.Successor with get() = S this :> Nat
-      member this.AddTo other = this.Predecessor()
+      //member this.AddTo other = this.Predecessor()
       
     static member inline (!++) (S _ as x) = S x    
     static member inline ( + ) (S x, y) = S (x + y)
@@ -67,25 +67,25 @@ module NaturalNumbers =
   
   
 
-  type List = interface end
+  type List<'T> = interface end
 
-  type Nil = Nil with
-    interface List
-    static member inline ( >>= ) (Nil, _) =
-      Nil
+  type Nil<'T> = Empty with
+    interface List<'T>
+    static member inline ( >>= ) (Empty, _) =
+      Empty
 
-    static member inline ( <*>>= ) (Nil, (Nil, f)) =
-      Nil
+    static member inline ( <*>>= ) (Empty, (Empty, f)) =
+      Empty
 
-  and Cons<'TItem, 'TList when 'TList :> List > = Cons of 'TItem * 'TList with
-    interface List
+  and Cons<'TItem, 'TList when 'TList :> List<'TItem> > = Cons of 'TItem * 'TList with
+    interface List<'TItem>
     static member inline ( >>= ) (Cons(item, list), f) =
       Cons(f item, list >>= f)  
 
     static member inline ( <*>>= ) (Cons(x, xs), (Cons(y, ys), f)) =
       Cons(f x y, xs <*>>= (ys, f))
 
-  let vect2 a b = Cons(a, Cons(b, Nil))
+  let vect2 a b = Cons(a, Cons(b, Empty))
   let vect3 a b c = Cons(a, vect2 b c)
 
   let x = vect2 2 3

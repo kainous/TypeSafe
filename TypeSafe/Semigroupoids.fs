@@ -3,23 +3,39 @@
 open System.Runtime.CompilerServices
 
 module Semigroupoid =
-  type Semigroupoid<'Source, 'Target> = 
-    abstract ComposeWith : other:Semigroupoid<'Target, 'Result> -> Semigroupoid<'Source, 'Result>
+  type Semigroupoid<'Container1, 'Source, 'Target when 'Container1 :> Semigroupoid<'Container1, 'Source, 'Target> > = 
+    abstract ComposeWith<'Container2, 'Container3, 'Result 
+      when 'Container2 :> Semigroupoid<'Container2, 'Target, 'Result>
+      and  'Container3 :> Semigroupoid<'Container3, 'Source, 'Result> > : other:Semigroupoid<'Container2, 'Target, 'Result> -> Semigroupoid<'Container3, 'Source, 'Result>
 
-  
+  //type Relation<'A, 'B> =
+  //  inherit Semigroupoid<'A, 'B>
+
 
   [<Extension>]
   type Semigroupoids() =
     [<Extension>]
-    static member ( *>> ) (x:Semigroupoid<'A, 'B>, y:Semigroupoid<'B, 'C>) = x.ComposeWith y
+    static member ( *>> ) (x:Semigroupoid<'Container1, 'A, 'B>, y:Semigroupoid<'Container2, 'B, 'C>) = x.ComposeWith y
   
     [<Extension>]
-    static member ( <<* ) (x:Semigroupoid<'B, 'C>, y:Semigroupoid<'A, 'B>) = y.ComposeWith x
-  
-    [<Extension>]
-    static member ( <<* ) (x:Semigroupoid<'C, 'B>, y:Semigroupoid<'B, 'A>) = y.ComposeWith x
+    static member ( <<* ) (x:Semigroupoid<'Container1, 'B, 'C>, y:Semigroupoid<'Container2, 'A, 'B>) = y.ComposeWith x  
 
   type Endo<'C, 'A> = Endo of 'C * 'A * 'A
+
+  type FinitePureMultifunction<'Source, 'Target when 'Source : comparison and 'Target : comparison >(multifunc : Map<'Source, Set<'Target>>) =
+    member private __.Items = 
+      multifunc
+    
+    member __.Apply (source : 'Source) =
+      multifunc.[source]
+
+    interface Semigroupoid<FinitePureMultifunction<'Source, 'Target>, 'Source, 'Target> with
+      member this.ComposeWith other =
+        seq {
+          for (key, items) in this.Items |> Map.toSeq do
+          for i in items do
+          yield key, other.Items |> Map.find i
+        } |> Map.ofSeq
 
   //type Relation<'Source, 'Target> = 
 

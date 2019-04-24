@@ -13,23 +13,32 @@ module Language =
 
   type Lang = interface end
 
-  type Const<'T> = Const of 'T with
+  type Embed<'T> = Embed of 'T with
     interface Lang
-    static member inline (!!) ((Const _) as a) = a
+    static member inline ( <&&&> ) (Embed a, _) = Embed a
+    static member inline (!!) (Embed a) = Embed a
 
   type Var<'T when 'T :> Nat > = Var of 'T with
     interface Lang
+    static member inline ( <&&&> ) (Var Z, Cons(head, _)) = head
+    static member inline ( <&&&> ) ((Var (S a)), Cons(_, tail)) = (Var a) <&&&> tail
     static member inline (!!) ((Var _) as a) = a
 
   type Lambda<'TDef when 'TDef :> Lang> = Lambda of 'TDef with
     interface Lang
-    static member inline (!!) (Lambda a) = Lambda(!!a)
+    static member inline ( <&&&> ) (Lambda(a), b) = a <&&&> Cons(Lambda(a), b)
+    //static member inline ( <&&&> ) (Lambda(Var Z), Cons(head, _)) = head
+    static member inline (!!) (Lambda a) = a <&&&> Empty
 
-  type Apply<'TApp> = Apply of 'TApp with
+  type Apply<'E, 'V> = Apply of 'E * 'V with
     interface Lang
-    static member inline (!!) (Apply(Lambda(Var Z), a)) = a
+    static member inline ( <&&&> ) (Apply(a, b), tail) = a <&&&> Cons(b, tail)
+    static member inline (!!) ((Apply _) as a) = a <&&&> Empty
 
-  let Id = Lambda(Var Z)
+  let T = fun x -> fun y -> x
+  let T' = !!Apply(Lambda(Lambda(Var(S Z))), Embed ())
+
+  let Id() = !!(Apply(Lambda(Lambda(Var Z)), Embed Z2_))
   let first = Lambda(Lambda(Var Z))
   let second = Lambda(Lambda(Var(S Z)))
 

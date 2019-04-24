@@ -15,7 +15,11 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Paraconsistency", "Paracons
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "BasicConstructions", "BasicConstructions\BasicConstructions.fsproj", "{7AF4C022-AE3B-4E6B-9F24-E08A8B3C1AB8}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FinalEncoding", "FinalEncoding\FinalEncoding.fsproj", "{FDCB7ED5-62E2-48FB-9454-A63E3C3484C8}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "FinalEncoding", "FinalEncoding\FinalEncoding.fsproj", "{FDCB7ED5-62E2-48FB-9454-A63E3C3484C8}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "LaTeX", "LaTeX\LaTeX.fsproj", "{0D274752-BB6B-42BA-97E7-FCE356FC06FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{318A6D2E-39DC-4C22-B8DB-30CF95B74CEC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +55,14 @@ Global
 		{FDCB7ED5-62E2-48FB-9454-A63E3C3484C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDCB7ED5-62E2-48FB-9454-A63E3C3484C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FDCB7ED5-62E2-48FB-9454-A63E3C3484C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D274752-BB6B-42BA-97E7-FCE356FC06FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D274752-BB6B-42BA-97E7-FCE356FC06FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D274752-BB6B-42BA-97E7-FCE356FC06FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D274752-BB6B-42BA-97E7-FCE356FC06FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{318A6D2E-39DC-4C22-B8DB-30CF95B74CEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{318A6D2E-39DC-4C22-B8DB-30CF95B74CEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{318A6D2E-39DC-4C22-B8DB-30CF95B74CEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{318A6D2E-39DC-4C22-B8DB-30CF95B74CEC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
